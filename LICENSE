@@ -1,0 +1,50 @@
+Nine-Security VERIS 9STriage Transparency Review License
+
+Copyright (c) 2026 Nine-Security Inc. All rights reserved.
+
+This source code is published for transparency review, audit, and
+non-commercial evaluation of the 9STriage scanner collection behavior.
+This is not an open source license.
+
+Permitted uses:
+
+- View, inspect, and audit the source code.
+- Clone or fork the repository through GitHub for review purposes.
+- Build and run the software for non-commercial internal evaluation,
+  testing, or security review.
+- Reference the source code when evaluating what 9STriage collects and
+  does not collect.
+
+Prohibited uses without prior written permission from Nine-Security Inc.:
+
+- Commercial use.
+- Resale, sublicensing, or redistribution as a commercial product.
+- Use in a managed security service, SaaS service, consulting service,
+  incident response service, or other commercial offering.
+- Incorporation into a commercial product, service, appliance, agent,
+  scanner, or platform.
+- Redistribution of modified binaries.
+- Use to provide a competing endpoint triage, forensic collection,
+  security monitoring, or analysis service.
+- Removal or alteration of copyright notices, attribution notices, or
+  license notices.
+
+No Central license:
+
+This license does not grant access to, or rights in, the proprietary
+Nine-Security VERIS Central service, analysis engine, scoring logic,
+correlation engine, API, report generator, signing keys, upload tokens,
+or deployment infrastructure.
+
+No warranty:
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+IN NO EVENT SHALL NINE-SECURITY INC. BE LIABLE FOR ANY CLAIM, DAMAGES,
+OR OTHER LIABILITY ARISING FROM THE SOFTWARE OR THE USE OF THE SOFTWARE.
+
+Commercial licensing:
+
+For commercial licensing, managed-service use, redistribution, or written
+permission, contact Nine-Security Inc.
