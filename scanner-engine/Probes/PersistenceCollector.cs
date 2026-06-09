@@ -137,6 +137,7 @@ public sealed class PersistenceCollector : ICollector
                         var publisher = ProcessEnrichment.GetPublisher(imagePath);
                         if (!string.IsNullOrWhiteSpace(publisher))
                             details["publisher"] = publisher;
+                        ProcessEnrichment.AddFileSignatureDetails(details, imagePath);
                         var hash = ProcessEnrichment.TryComputeSha256(imagePath);
                         if (!string.IsNullOrWhiteSpace(hash))
                             details["hash"] = hash;
@@ -199,7 +200,7 @@ public sealed class PersistenceCollector : ICollector
                     7 => "paused",
                     _ => "unknown"
                 };
-                GetServiceConfig(hScm, svcName, out string imagePath, out string startTypeStr);
+                GetServiceConfig(hScm, svcName, out string imagePath, out string startTypeStr, out string serviceAccount);
                 var details = new Dictionary<string, object?>
                 {
                     ["service_name"] = svcName,
@@ -207,12 +208,15 @@ public sealed class PersistenceCollector : ICollector
                     ["state"] = state,
                     ["start_type"] = startTypeStr
                 };
+                if (!string.IsNullOrWhiteSpace(serviceAccount))
+                    details["service_account"] = serviceAccount;
                 if (!string.IsNullOrEmpty(imagePath))
                 {
                     details["image_path"] = imagePath;
                     var publisher = ProcessEnrichment.GetPublisher(imagePath);
                     if (!string.IsNullOrWhiteSpace(publisher))
                         details["publisher"] = publisher;
+                    ProcessEnrichment.AddFileSignatureDetails(details, imagePath);
                     var hash = ProcessEnrichment.TryComputeSha256(imagePath);
                     if (!string.IsNullOrWhiteSpace(hash))
                         details["hash"] = hash;
@@ -229,10 +233,11 @@ public sealed class PersistenceCollector : ICollector
         }
     }
 
-    private static void GetServiceConfig(IntPtr hScm, string serviceName, out string imagePath, out string startTypeStr)
+    private static void GetServiceConfig(IntPtr hScm, string serviceName, out string imagePath, out string startTypeStr, out string serviceAccount)
     {
         imagePath = "";
         startTypeStr = "unknown";
+        serviceAccount = "";
         IntPtr hSvc = Native.OpenServiceW(hScm, serviceName, Native.SERVICE_QUERY_CONFIG);
         if (hSvc == IntPtr.Zero) return;
         try
@@ -243,7 +248,7 @@ public sealed class PersistenceCollector : ICollector
             var buf = new byte[cbNeeded];
             if (!Native.QueryServiceConfigW(hSvc, buf, (uint)buf.Length, ref cbNeeded))
                 return;
-            // QUERY_SERVICE_CONFIGW: lpBinaryPathName at offset 8 (after dwServiceType, dwStartType), startType at offset 4
+            // QUERY_SERVICE_CONFIGW has fixed DWORD fields followed by pointer fields.
             uint startType = BitConverter.ToUInt32(buf, 4);
             startTypeStr = startType switch
             {
@@ -254,10 +259,17 @@ public sealed class PersistenceCollector : ICollector
                 4 => "disabled",
                 _ => "unknown"
             };
-            int pathPtrOffset = 12; // QUERY_SERVICE_CONFIGW: after dwServiceType(4)+dwStartType(4)+dwErrorControl(4)
+            int pathPtrOffset = IntPtr.Size == 8 ? 16 : 12;
             IntPtr pPath = IntPtr.Size == 8 ? (IntPtr)BitConverter.ToInt64(buf, pathPtrOffset) : (IntPtr)BitConverter.ToInt32(buf, pathPtrOffset);
             if (pPath != IntPtr.Zero)
-                imagePath = Marshal.PtrToStringUni(pPath) ?? "";
+                imagePath = ProcessCollector.TruncateForEvidence(Marshal.PtrToStringUni(pPath), 256) ?? "";
+
+            int startNamePtrOffset = IntPtr.Size == 8 ? 48 : 28;
+            IntPtr pStartName = IntPtr.Size == 8
+                ? (IntPtr)BitConverter.ToInt64(buf, startNamePtrOffset)
+                : (IntPtr)BitConverter.ToInt32(buf, startNamePtrOffset);
+            if (pStartName != IntPtr.Zero)
+                serviceAccount = ProcessCollector.TruncateForEvidence(Marshal.PtrToStringUni(pStartName), 128) ?? "";
         }
         finally
         {
@@ -337,6 +349,7 @@ public sealed class PersistenceCollector : ICollector
                         var publisher = ProcessEnrichment.GetPublisher(execImage);
                         if (!string.IsNullOrWhiteSpace(publisher))
                             fallbackDetails["publisher"] = publisher;
+                        ProcessEnrichment.AddFileSignatureDetails(fallbackDetails, execImage);
                         var hash = ProcessEnrichment.TryComputeSha256(execImage);
                         if (!string.IsNullOrWhiteSpace(hash))
                             fallbackDetails["hash"] = hash;
@@ -613,6 +626,7 @@ public sealed class PersistenceCollector : ICollector
                     var publisher = ProcessEnrichment.GetPublisher(entry);
                     if (!string.IsNullOrWhiteSpace(publisher))
                         details["publisher"] = publisher;
+                    ProcessEnrichment.AddFileSignatureDetails(details, entry);
                     var hash = ProcessEnrichment.TryComputeSha256(entry);
                     if (!string.IsNullOrWhiteSpace(hash))
                         details["hash"] = hash;

@@ -70,7 +70,7 @@ public sealed class DriverCollector : ICollector
                 if (!string.IsNullOrWhiteSpace(imagePath))
                 {
                     row["signer"] = GetSigner(imagePath);
-                    row["signature_status"] = "unknown";
+                    ProcessEnrichment.AddFileSignatureDetails(row, imagePath);
                 }
 
                 drivers.Add(row);

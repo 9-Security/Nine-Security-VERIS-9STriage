@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 
 namespace NineSTriage.Engine.Probes;
 
@@ -10,7 +11,19 @@ internal static class ProcessEnrichment
         public string ProcessFamily { get; init; } = "unknown";
         public string? Publisher { get; init; }
         public bool? Signed { get; init; }
+        public SignatureDetails? Signature { get; init; }
         public bool JitExpected { get; init; }
+    }
+
+    internal sealed class SignatureDetails
+    {
+        public bool SignaturePresent { get; init; }
+        public string Status { get; init; } = "unknown";
+        public string? Subject { get; init; }
+        public string? Issuer { get; init; }
+        public string? Thumbprint { get; init; }
+        public string? NotBeforeUtc { get; init; }
+        public string? NotAfterUtc { get; init; }
     }
 
     internal static Enrichment Build(string? processName, string? imagePath, string? commandLine)
@@ -20,14 +33,13 @@ internal static class ProcessEnrichment
         var cmd = (commandLine ?? "").Trim();
         var family = ClassifyProcessFamily(name, path, cmd);
         var publisher = GetPublisher(path);
-        bool? signed = null;
-        if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
-            signed = !string.IsNullOrWhiteSpace(publisher);
+        var signature = GetSignatureDetails(path);
         return new Enrichment
         {
             ProcessFamily = family,
             Publisher = publisher,
-            Signed = signed,
+            Signed = signature?.SignaturePresent,
+            Signature = signature,
             JitExpected = IsJitExpectedFamily(family),
         };
     }
@@ -43,7 +55,39 @@ internal static class ProcessEnrichment
             details["publisher"] = enrichment.Publisher;
         if (enrichment.Signed.HasValue)
             details["signed"] = enrichment.Signed.Value;
+        if (enrichment.Signature is { } signature)
+            details["signature"] = ToDetailsDictionary(signature);
         return details;
+    }
+
+    internal static Dictionary<string, object?> ToDetailsDictionary(SignatureDetails signature)
+    {
+        var details = new Dictionary<string, object?>
+        {
+            ["signature_present"] = signature.SignaturePresent,
+            ["signature_status"] = signature.Status,
+        };
+        if (!string.IsNullOrWhiteSpace(signature.Subject))
+            details["subject"] = signature.Subject;
+        if (!string.IsNullOrWhiteSpace(signature.Issuer))
+            details["issuer"] = signature.Issuer;
+        if (!string.IsNullOrWhiteSpace(signature.Thumbprint))
+            details["thumbprint"] = signature.Thumbprint;
+        if (!string.IsNullOrWhiteSpace(signature.NotBeforeUtc))
+            details["not_before_utc"] = signature.NotBeforeUtc;
+        if (!string.IsNullOrWhiteSpace(signature.NotAfterUtc))
+            details["not_after_utc"] = signature.NotAfterUtc;
+        return details;
+    }
+
+    internal static void AddFileSignatureDetails(Dictionary<string, object?> details, string? path)
+    {
+        var signature = GetSignatureDetails(path);
+        if (signature is null)
+            return;
+        details["signed"] = signature.SignaturePresent;
+        details["signature_status"] = signature.Status;
+        details["signature"] = ToDetailsDictionary(signature);
     }
 
     internal static Dictionary<string, object?> BuildIdentityDetails(string? imagePath)
@@ -118,6 +162,42 @@ internal static class ProcessEnrichment
         catch
         {
             return null;
+        }
+    }
+
+    internal static SignatureDetails? GetSignatureDetails(string? path)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                return null;
+            using var cert = new X509Certificate2(X509Certificate.CreateFromSignedFile(path));
+            return new SignatureDetails
+            {
+                SignaturePresent = true,
+                Status = "signed_certificate_present",
+                Subject = ProcessCollector.TruncateForEvidence(cert.Subject, 240),
+                Issuer = ProcessCollector.TruncateForEvidence(cert.Issuer, 240),
+                Thumbprint = ProcessCollector.TruncateForEvidence(cert.Thumbprint?.Replace(" ", "").ToLowerInvariant(), 80),
+                NotBeforeUtc = cert.NotBefore.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                NotAfterUtc = cert.NotAfter.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            };
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            return new SignatureDetails
+            {
+                SignaturePresent = false,
+                Status = "unsigned_or_unreadable_signature",
+            };
+        }
+        catch
+        {
+            return new SignatureDetails
+            {
+                SignaturePresent = false,
+                Status = "signature_read_error",
+            };
         }
     }
 

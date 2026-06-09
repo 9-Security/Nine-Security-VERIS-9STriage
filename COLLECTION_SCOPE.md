@@ -22,6 +22,7 @@ This document summarizes the endpoint metadata that 9STriage may collect. The sc
 - executable architecture
 - token elevation state
 - publisher/company metadata when available from file version information
+- file signature metadata when available, including certificate subject, issuer, thumbprint, validity timestamps, and signature read status
 
 ## Network Metadata
 
@@ -35,6 +36,7 @@ This document summarizes the endpoint metadata that 9STriage may collect. The sc
 - connection state
 - owning PID
 - process context for the owning PID when available
+- owning-process identity and signature metadata when available
 
 ## Memory Metadata
 
@@ -60,9 +62,10 @@ The scanner records memory metadata and bounded samples needed to compute entrop
 
 - registry Run key values
 - service configuration metadata
+- service start account metadata
 - scheduled task inventory and task action metadata
 - driver and minifilter inventory metadata
-- executable path, command line, publisher, and hash for persistence targets when available
+- executable path, command line, publisher, hash, and signature metadata for persistence targets when available
 
 ## Artefact And Integrity Metadata
 

@@ -256,6 +256,11 @@ public sealed class NetworkCollector : ICollector
             process["signer"] = info.Signer;
         if (!string.IsNullOrWhiteSpace(info.SignatureStatus))
             process["signature_status"] = info.SignatureStatus;
+        if (info.Signature is { } signature)
+        {
+            process["signed"] = signature.SignaturePresent;
+            process["signature"] = ProcessEnrichment.ToDetailsDictionary(signature);
+        }
         if (process.Count > 0)
             details["process"] = process;
     }
@@ -273,6 +278,7 @@ public sealed class NetworkCollector : ICollector
                 if (!pid.HasValue || pid.Value <= 0)
                     continue;
                 var path = ProcessCollector.TruncateForEvidence(obj["ExecutablePath"]?.ToString(), 180);
+                var signature = ProcessEnrichment.GetSignatureDetails(path);
                 snapshot[pid.Value] = new NetworkProcessInfo
                 {
                     Name = ProcessCollector.TruncateForEvidence(obj["Name"]?.ToString(), 80) ?? "unknown",
@@ -282,7 +288,8 @@ public sealed class NetworkCollector : ICollector
                     Owner = ProcessCollector.TruncateForEvidence(BuildOwner(obj), 96),
                     ExecutableArchitecture = GetProcessArchitecture(pid.Value),
                     Signer = GetSigner(path),
-                    SignatureStatus = string.IsNullOrWhiteSpace(path) ? null : "unknown"
+                    SignatureStatus = signature?.Status,
+                    Signature = signature
                 };
             }
         }
@@ -360,6 +367,7 @@ public sealed class NetworkCollector : ICollector
         public string? ExecutableArchitecture { get; init; }
         public string? Signer { get; init; }
         public string? SignatureStatus { get; init; }
+        public ProcessEnrichment.SignatureDetails? Signature { get; init; }
     }
 
     [StructLayout(LayoutKind.Sequential)]
