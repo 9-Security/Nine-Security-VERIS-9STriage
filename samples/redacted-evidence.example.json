@@ -1,0 +1,160 @@
+{
+  "schema": "veris.evidence.example",
+  "schema_version": "1.0",
+  "redaction_notice": "This is a synthetic, redacted example. It contains no real hostnames, usernames, IP addresses, tokens, file contents, or customer data.",
+  "scanner": {
+    "name": "9STriage",
+    "version": "EXAMPLE-1.0.0",
+    "role": "endpoint_evidence_collector"
+  },
+  "collection": {
+    "request_id": "EXAMPLE-REQUEST-ID",
+    "host_id": "EXAMPLE-HOST-ID",
+    "host_name": "EXAMPLE-WORKSTATION",
+    "collected_at_utc": "2026-06-09T00:00:00Z",
+    "observation_window_seconds": 30,
+    "collectors": [
+      {
+        "name": "process",
+        "status": "ok",
+        "items": 2
+      },
+      {
+        "name": "network",
+        "status": "ok",
+        "items": 1
+      },
+      {
+        "name": "memory",
+        "status": "partial",
+        "items": 1,
+        "gap_reason": "EXAMPLE_ACCESS_LIMITATION"
+      },
+      {
+        "name": "persistence",
+        "status": "ok",
+        "items": 1
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "id": "ev-process-001",
+      "type": "process",
+      "observed_at_utc": "2026-06-09T00:00:01Z",
+      "process": {
+        "pid": 1234,
+        "parent_pid": 1000,
+        "name": "example-app.exe",
+        "image_path": "C:\\Program Files\\ExampleVendor\\ExampleApp\\example-app.exe",
+        "normalized_image_path": "c:\\program files\\examplevendor\\exampleapp\\example-app.exe",
+        "command_line": "\"C:\\Program Files\\ExampleVendor\\ExampleApp\\example-app.exe\" --example-mode",
+        "start_time_utc": "2026-06-09T00:00:00Z",
+        "owner": "EXAMPLE-DOMAIN\\example-user",
+        "session_id": 1,
+        "architecture": "x64",
+        "token_elevation": "limited",
+        "identity": {
+          "image_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "file_size_bytes": 123456,
+          "file_created_utc": "2026-06-01T00:00:00Z",
+          "file_modified_utc": "2026-06-01T00:00:00Z",
+          "publisher": "Example Vendor Ltd."
+        },
+        "parent": {
+          "pid": 1000,
+          "name": "explorer.exe",
+          "image_path": "C:\\Windows\\explorer.exe"
+        }
+      }
+    },
+    {
+      "id": "ev-network-001",
+      "type": "network_connection",
+      "observed_at_utc": "2026-06-09T00:00:05Z",
+      "network": {
+        "protocol": "tcp",
+        "state": "Established",
+        "local_address": "192.0.2.10",
+        "local_port": 50000,
+        "remote_address": "198.51.100.20",
+        "remote_port": 443,
+        "owning_pid": 1234
+      },
+      "details": {
+        "process": {
+          "pid": 1234,
+          "name": "example-app.exe",
+          "identity": {
+            "normalized_image_path": "c:\\program files\\examplevendor\\exampleapp\\example-app.exe",
+            "image_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        }
+      }
+    },
+    {
+      "id": "ev-memory-001",
+      "type": "memory_region",
+      "observed_at_utc": "2026-06-09T00:00:10Z",
+      "memory": {
+        "pid": 1234,
+        "base_address": "0x0000000010000000",
+        "region_size_bytes": 65536,
+        "protection": "PAGE_EXECUTE_READWRITE",
+        "region_type": "MEM_PRIVATE",
+        "entropy": 6.75,
+        "is_image_backed": false
+      },
+      "process_context": {
+        "pid": 1234,
+        "name": "example-app.exe",
+        "identity": {
+          "normalized_image_path": "c:\\program files\\examplevendor\\exampleapp\\example-app.exe",
+          "image_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    },
+    {
+      "id": "ev-persistence-001",
+      "type": "persistence",
+      "observed_at_utc": "2026-06-09T00:00:15Z",
+      "persistence": {
+        "kind": "scheduled_task",
+        "name": "\\ExampleVendor\\Example Maintenance",
+        "action": "\"C:\\Program Files\\ExampleVendor\\ExampleApp\\example-app.exe\" --scheduled-maintenance",
+        "run_as": "EXAMPLE-DOMAIN\\example-user",
+        "hidden": false,
+        "run_level": "LeastPrivilege"
+      },
+      "target": {
+        "path": "C:\\Program Files\\ExampleVendor\\ExampleApp\\example-app.exe",
+        "normalized_path": "c:\\program files\\examplevendor\\exampleapp\\example-app.exe",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "id": "ev-gap-001",
+      "type": "collection_gap",
+      "observed_at_utc": "2026-06-09T00:00:20Z",
+      "gap": {
+        "collector": "memory",
+        "status": "partial",
+        "reason": "EXAMPLE_ACCESS_LIMITATION",
+        "message": "Synthetic example showing how a collector may report partial data."
+      }
+    }
+  ],
+  "not_collected_examples": [
+    "browser_history",
+    "browser_cookies",
+    "saved_passwords",
+    "document_contents",
+    "email_contents",
+    "screenshots",
+    "keystrokes",
+    "clipboard_contents",
+    "full_process_memory_dumps",
+    "central_scoring_logic",
+    "central_report_logic"
+  ]
+}
