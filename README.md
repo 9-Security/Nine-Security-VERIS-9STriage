@@ -16,6 +16,14 @@ This repository lets customers, auditors, and security practitioners inspect wha
 
 9STriage is an evidence collector. It gathers bounded endpoint metadata and packages it as evidence for VERIS Central.
 
+## Try VERIS
+
+You can try the VERIS service here:
+
+https://nine-security.com/veris.html
+
+The public service uses VERIS Central to analyze submitted 9STriage evidence packages. Central remains proprietary and is not included in this repository.
+
 9STriage does not:
 
 - make final malicious or benign decisions
