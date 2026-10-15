@@ -22,6 +22,16 @@ Review your legal, privacy, and incident-response authorization requirements bef
 
 The proprietary VERIS Central service is not included in this repository. Central performs interpretation, scoring, correlation, root-cause analysis, and report generation after evidence is submitted.
 
+### File-Hash Reputation Checks
+
+During analysis, Central may check the SHA-256 hashes of executables in the evidence (for example, running programs, persistence targets, and executables in temporary folders) against the Nine-Security malware analysis platform and third-party threat-intelligence services (such as MalwareBazaar, abuse.ch URLhaus and ThreatFox, VirusTotal, and AlienVault OTX) to identify known malware.
+
+- Only hashes are sent. File contents, file names, paths, hostnames, usernames, and contact details are not.
+- A hash is a one-way fingerprint of a file's contents and cannot be used to reconstruct the file.
+- Those services may retain the hashes they are queried with under their own policies.
+
+See also the Nine-Security Privacy Policy: https://nine-security.com/privacy.html
+
 ## Tokens And Signing Keys
 
 This repository does not include:
